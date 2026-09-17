@@ -3,19 +3,19 @@
 // ============================================================
 //  后端技术沉淀 —— 站点样式
 //
-//  分两层，各司其职：
-//    1) 配色（主色/强调色/背景）→ quartz.config.yaml 的 theme.colors
-//    2) 排版与细节（字体、行高、圆角、阴影、间距）→ 本文件
+//  层叠说明（重要）：
+//    构建时 base.scss 被包进 `@layer quartz-base`，而本文件是无层样式。
+//    无层样式恒压过层内样式（与特异性无关），所以这里的覆盖一定生效。
+//    但本文件内部仍按正常特异性比较 —— 写选择器时要留意 Quartz 自带的
+//    `a.internal`（0,1,1）会压过 `.card`（0,1,0）这类单类选择器。
 //
-//  想换主题色，改 config.yaml 里的 secondary / tertiary 即可，
-//  本文件的颜色全部走 var(--secondary) 等变量，会自动跟随。
+//  配色在 quartz.config.yaml 的 theme.colors，改那里即可全局换色。
 // ============================================================
 
 // ------------------------------------------------------------
 //  0. 设计变量
 // ------------------------------------------------------------
 :root {
-  // 中文字体栈：优先系统字体，避免加载外部字体造成卡顿
   --font-cn:
     "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", "微软雅黑",
     "Noto Sans SC", "Source Han Sans SC", "WenQuanYi Micro Hei", sans-serif;
@@ -23,27 +23,27 @@
     "JetBrains Mono", "Cascadia Code", "Fira Code", Consolas, Monaco,
     "Microsoft YaHei", monospace;
 
-  // 正文阅读宽度：中文每行 40 字左右最舒服，太宽会频繁换行丢行
-  --content-width: 46rem;
+  --content-width: 46rem;   // 正文：中文每行 40 字左右
+  --index-width: 58rem;     // 首页：卡片网格需要更宽的容器
 
-  // 圆角与阴影：统一取值，避免页面上圆角大小混战
   --r-xs: 4px;
   --r-sm: 6px;
   --r-md: 10px;
-  --r-lg: 14px;
+  --r-lg: 16px;
+  --r-pill: 999px;
 
   --shadow-1: 0 1px 2px rgba(16, 24, 40, 0.04);
   --shadow-2: 0 4px 14px rgba(16, 24, 40, 0.07);
-  --shadow-3: 0 10px 30px rgba(16, 24, 40, 0.1);
+  --shadow-3: 0 12px 32px rgba(16, 24, 40, 0.12);
 
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --grad: linear-gradient(100deg, var(--secondary), var(--tertiary));
 }
 
-// 深色模式下阴影要更重才看得见，否则等于没有
 [saved-theme="dark"] {
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-2: 0 4px 14px rgba(0, 0, 0, 0.42);
-  --shadow-3: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --shadow-3: 0 12px 32px rgba(0, 0, 0, 0.55);
 }
 
 // ------------------------------------------------------------
@@ -68,7 +68,6 @@ samp {
 }
 
 body {
-  // 让中文字形边缘更干净，深色模式下尤其明显
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -79,7 +78,6 @@ body {
   color: var(--dark);
 }
 
-// 细滚动条，别让默认的灰色粗条破坏质感
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--lightgray) transparent;
@@ -96,7 +94,7 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: var(--lightgray);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   border: 2px solid transparent;
   background-clip: content-box;
 }
@@ -107,22 +105,148 @@ body {
 }
 
 // ------------------------------------------------------------
-//  2. 阅读区宽度与节奏
-//     .center（面包屑/标题区）与 article 是同级网格项，
-//     必须设成同样的宽度和居中方式，否则会左右错位。
+//  2. 布局宽度
+//     .center 同时包住 .page-header 和 article，约束它就够了
 // ------------------------------------------------------------
-#quartz-body {
-  & > .center,
-  & > article {
-    width: 100%;
-    max-width: var(--content-width);
-    margin-left: auto;
-    margin-right: auto;
+#quartz-body > .center {
+  width: 100%;
+  max-width: var(--content-width);
+  margin-inline: auto;
+}
+
+footer {
+  max-width: var(--content-width);
+  margin-inline: auto;
+}
+
+// 首页放宽，好让卡片排成 3 列
+body[data-slug="index"] {
+  --content-width: var(--index-width);
+}
+
+// ------------------------------------------------------------
+//  3. 页面标题区（面包屑 / 大标题 / 元信息）
+// ------------------------------------------------------------
+.page-header {
+  margin-top: 0.75rem;
+
+  h1.article-title {
+    font-size: 2.1rem;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.5rem;
+  }
+
+  // 日期 / 阅读时长：压成一行小字，别和大标题抢戏
+  p.content-meta {
+    margin: 0 0 0.4rem;
+    font-size: 0.86rem;
+    color: var(--gray);
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+
+    > * {
+      display: inline-flex;
+      align-items: center;
+    }
   }
 }
 
+// 面包屑做成小胶囊
+.breadcrumb-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem;
+  margin-bottom: 0.9rem;
+  font-size: 0.84rem;
+
+  .breadcrumb-element {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+
+    a {
+      color: var(--gray);
+      text-decoration: none;
+      padding: 0.1rem 0.5rem;
+      border-radius: var(--r-pill);
+      transition: background-color 0.15s var(--ease), color 0.15s var(--ease);
+
+      &:hover {
+        background-color: var(--highlight);
+        color: var(--secondary);
+      }
+    }
+
+    // 分隔符 ❯
+    > p {
+      color: var(--lightgray);
+      margin: 0;
+    }
+  }
+}
+
+// 去掉正文里重复的一级标题（与 frontmatter title 完全一致，已全量校验）
+.markdown-preview-view > h1 {
+  display: none;
+}
+
+// ------------------------------------------------------------
+//  4. 正文标题体系
+// ------------------------------------------------------------
+.markdown-preview-view {
+  > h2 {
+    position: relative;
+    font-size: 1.42rem;
+    line-height: 1.5;
+    margin: 2.8rem 0 1rem;
+    padding-left: 0.85rem;
+    border-left: 4px solid var(--secondary);
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0.85rem;
+      right: 0;
+      bottom: -0.55rem;
+      height: 1px;
+      background: linear-gradient(90deg, var(--lightgray), transparent 70%);
+    }
+  }
+
+  > h3 {
+    font-size: 1.14rem;
+    line-height: 1.55;
+    margin: 1.9rem 0 0.8rem;
+    padding-left: 0.7rem;
+    border-left: 3px solid var(--tertiary);
+  }
+
+  > h4 {
+    font-size: 1.02rem;
+    margin: 1.5rem 0 0.6rem;
+    color: var(--secondary);
+  }
+
+  // 锚点默认隐藏，悬停才出现
+  h2 > a[role="anchor"],
+  h3 > a[role="anchor"] {
+    opacity: 0;
+    transition: opacity 0.15s var(--ease);
+  }
+
+  h2:hover > a[role="anchor"],
+  h3:hover > a[role="anchor"] {
+    opacity: 0.45;
+  }
+}
+
+// ------------------------------------------------------------
+//  5. 正文排版
+// ------------------------------------------------------------
 article {
-  // 中文字距略微放开，长段落更透气
   p,
   li,
   blockquote,
@@ -131,7 +255,6 @@ article {
     letter-spacing: 0.01em;
   }
 
-  // 中文行高比西文要宽，1.85 是长文阅读的舒适区
   p {
     line-height: 1.85;
     margin: 1.05em 0;
@@ -141,85 +264,27 @@ article {
     line-height: 1.8;
   }
 
-  // 段落之间靠间距区分，不用首行缩进（技术文档中列表/代码多，缩进会乱）
   ul,
   ol {
     padding-left: 1.4rem;
   }
-}
 
-// ------------------------------------------------------------
-//  3. 标题体系
-//     用「左侧色条 + 渐变短线」建立层级，不靠加粗堆叠
-// ------------------------------------------------------------
-article {
-  & > h1 {
-    position: relative;
-    font-size: 2.05rem;
-    line-height: 1.35;
-    letter-spacing: -0.01em;
-    padding-bottom: 0.75rem;
-    margin-top: 0.5rem;
-    margin-bottom: 1.6rem;
-
-    // 标题下的渐变小色条，是整站最醒目的识别元素
-    &::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      bottom: 0;
-      width: 3.5rem;
-      height: 4px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, var(--secondary), var(--tertiary));
-    }
-  }
-
-  h2 {
-    font-size: 1.42rem;
-    line-height: 1.5;
-    margin-top: 2.6rem;
-    margin-bottom: 1rem;
-    padding-left: 0.8rem;
-    border-left: 4px solid var(--secondary);
-    border-bottom: none;
-    border-radius: 1px;
-  }
-
-  h3 {
-    font-size: 1.14rem;
-    line-height: 1.55;
-    margin-top: 1.9rem;
-    margin-bottom: 0.8rem;
-    padding-left: 0.7rem;
-    border-left: 3px solid var(--tertiary);
-  }
-
-  h4 {
-    font-size: 1.02rem;
-    margin-top: 1.5rem;
-    color: var(--secondary);
-  }
-
-  // 标题旁的锚点链接，默认隐藏，悬停才浮现
-  h2:hover > a[href^="#"],
-  h3:hover > a[href^="#"] {
-    opacity: 0.45;
+  // 列表符号与文字拉开一点距离
+  li::marker {
+    color: var(--gray);
   }
 }
 
 // ------------------------------------------------------------
-//  4. 代码块
+//  6. 代码块
 // ------------------------------------------------------------
 :not(pre) > code {
-  // 行内代码做成「胶囊」，在中文里才不会被挤成一团
   padding: 0.14em 0.4em;
   border-radius: var(--r-xs);
   background: var(--lightgray);
   color: var(--secondary);
   font-size: 0.88em;
   word-break: break-word;
-  // 中文与代码混排时，胶囊上下不要顶到行高
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
 }
@@ -230,24 +295,41 @@ figure[data-rehype-pretty-code-figure] {
   & > pre {
     border-radius: var(--r-md);
     box-shadow: var(--shadow-1);
+    border: 1px solid var(--lightgray);
   }
 
-  // 有语言标题时，标题与代码块拼成一张卡片
+  // 语言标题做成「窗口栏」，带三个装饰点
   & > [data-rehype-pretty-code-title] {
-    font-size: 0.85rem;
-    // 顶部圆角 + 去掉下边框，视觉上和代码块连成一体
-    padding: 0.3rem 0.85rem;
+    position: relative;
+    font-size: 0.8rem;
+    letter-spacing: 0.03em;
+    padding: 0.4rem 0.9rem 0.4rem 3.1rem;
     margin-bottom: 0;
     border: 1px solid var(--lightgray);
     border-bottom: none;
     border-radius: var(--r-md) var(--r-md) 0 0;
     background: var(--lightgray);
     color: var(--darkgray);
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: 0.9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--gray);
+      opacity: 0.55;
+      box-shadow: 12px 0 0 var(--gray), 24px 0 0 var(--gray);
+    }
   }
 }
 
 figure:has(> [data-rehype-pretty-code-title]) > pre {
   border-radius: 0 0 var(--r-md) var(--r-md);
+  border-top: none;
 }
 
 pre {
@@ -262,7 +344,6 @@ pre {
     & > [data-line] {
       padding: 0 0.9rem;
 
-      // 行号再淡一点，避免和代码抢注意力
       &::before {
         color: var(--gray);
         opacity: 0.45;
@@ -272,14 +353,14 @@ pre {
 }
 
 // ------------------------------------------------------------
-//  5. 表格
-//     笔记里速查表特别多，是本站的高频元素，值得单独打磨
+//  7. 表格
 // ------------------------------------------------------------
 .table-container {
   margin: 1.5rem 0;
   border: 1px solid var(--lightgray);
   border-radius: var(--r-md);
   background: var(--light);
+  overflow: hidden;
 
   & > table {
     margin: 0;
@@ -294,11 +375,6 @@ pre {
       padding: 0.55rem 0.9rem;
     }
 
-    & > * {
-      line-height: 1.6;
-    }
-
-    // 表头：淡底色 + 底部一条实线，比默认的粗灰线干净
     thead tr {
       border-bottom: 2px solid var(--lightgray);
     }
@@ -319,7 +395,6 @@ pre {
         border-bottom: none;
       }
 
-      // 悬停整行高亮，宽表格横向读的时候不容易串行
       &:hover {
         background-color: var(--highlight);
       }
@@ -334,36 +409,31 @@ pre {
 }
 
 // ------------------------------------------------------------
-//  6. 引用块
-//     笔记里的「一句话概括」「💡 提示」都走引用块，需要醒目但不吵
+//  8. 引用块与 callout
 // ------------------------------------------------------------
-article {
-  blockquote {
-    position: relative;
-    margin: 1.5rem 0;
-    padding: 0.85rem 1.1rem;
-    border-left: 3px solid var(--secondary);
-    border-radius: 0 var(--r-md) var(--r-md) 0;
-    background: var(--highlight);
-    color: var(--darkgray);
+.markdown-preview-view > blockquote {
+  position: relative;
+  margin: 1.5rem 0;
+  padding: 0.9rem 1.1rem;
+  border-left: 3px solid var(--secondary);
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+  background: var(--highlight);
+  color: var(--darkgray);
 
-    p {
-      margin: 0.4em 0;
-      line-height: 1.8;
-    }
+  p {
+    margin: 0.4em 0;
+    line-height: 1.8;
+  }
 
-    // 首尾段落不要多余留白，否则块会显得虚胖
-    & > :first-child {
-      margin-top: 0;
-    }
+  > :first-child {
+    margin-top: 0;
+  }
 
-    & > :last-child {
-      margin-bottom: 0;
-    }
+  > :last-child {
+    margin-bottom: 0;
   }
 }
 
-// Obsidian 风格的 callout（> [!note] / > [!warning]）
 .callout {
   margin: 1.5rem 0;
   border-radius: var(--r-md);
@@ -377,7 +447,7 @@ article {
 }
 
 // ------------------------------------------------------------
-//  7. 链接与双链
+//  9. 链接
 // ------------------------------------------------------------
 a {
   text-decoration-thickness: 1px;
@@ -400,10 +470,96 @@ a {
   }
 }
 
+// 标签胶囊
+a.internal.tag-link {
+  font-size: 0.8rem;
+  padding: 0.14em 0.6em;
+  border-radius: var(--r-pill);
+  background: var(--lightgray);
+  color: var(--darkgray);
+  border: 1px solid transparent;
+
+  &:hover {
+    background: var(--highlight);
+    color: var(--secondary);
+    border-color: var(--secondary);
+    text-decoration: none;
+  }
+}
+
 // ------------------------------------------------------------
-//  8. 导航与侧栏
+//  10. 左侧栏：站点标题 / 搜索 / 文件树
 // ------------------------------------------------------------
-// 左侧文件树：中文目录名多，行距略收紧、悬停给足反馈
+.sidebar.left {
+  h2.page-title {
+    margin: 0 0 1.1rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+
+    a {
+      text-decoration: none;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      transition: opacity 0.15s var(--ease);
+
+      &:hover {
+        opacity: 0.8;
+      }
+    }
+  }
+
+  // 搜索按钮：做成带边框的胶囊
+  .search-button {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    padding: 0.45rem 0.85rem;
+    border: 1px solid var(--lightgray);
+    border-radius: var(--r-pill);
+    background: var(--light);
+    box-shadow: var(--shadow-1);
+    color: var(--gray);
+    transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease),
+      color 0.15s var(--ease);
+
+    &:hover {
+      border-color: var(--secondary);
+      box-shadow: var(--shadow-2);
+      color: var(--secondary);
+      background: var(--light);
+    }
+
+    svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+    }
+
+    .search-path {
+      stroke: currentColor;
+    }
+  }
+
+  // 暗色模式按钮：圆形
+  button.darkmode {
+    border-radius: 50%;
+    border: 1px solid var(--lightgray);
+    background: var(--light);
+    box-shadow: var(--shadow-1);
+    transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
+
+    &:hover {
+      border-color: var(--secondary);
+      box-shadow: var(--shadow-2);
+      background: var(--light);
+    }
+  }
+}
+
+// 文件树
 .explorer {
   font-size: 0.92rem;
 
@@ -411,14 +567,12 @@ a {
   .nav-folder-title {
     border-radius: var(--r-sm);
     transition: background-color 0.15s var(--ease);
+
+    &:hover {
+      background-color: var(--highlight);
+    }
   }
 
-  .nav-file-title:hover,
-  .nav-folder-title:hover {
-    background-color: var(--highlight);
-  }
-
-  // 当前所在页高亮
   .nav-file-title.active,
   .nav-file-title[aria-current] {
     background-color: var(--highlight);
@@ -427,212 +581,488 @@ a {
   }
 }
 
-// 右侧目录
-.toc {
-  font-size: 0.9rem;
+// ------------------------------------------------------------
+//  11. 右侧栏：目录 / 图谱 / 反向链接 —— 统一卡片化
+// ------------------------------------------------------------
+.sidebar.right {
+  gap: 1rem;
 
-  a {
-    text-decoration: none;
-
-    &:hover {
-      color: var(--secondary);
-    }
+  > * {
+    background: var(--light);
+    border: 1px solid var(--lightgray);
+    border-radius: var(--r-lg);
+    padding: 0.95rem 1.05rem;
+    box-shadow: var(--shadow-1);
   }
 
-  // 当前阅读到的章节
-  .in-view {
-    color: var(--secondary);
+  // 图谱外框本来就有描边，放进卡片后去掉以免「框中框」
+  .graph-outer {
+    border: none;
+    border-radius: var(--r-md);
+  }
+
+  h3 {
+    margin-top: 0;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    color: var(--gray);
     font-weight: 600;
   }
 }
 
-// 小标题（目录/关系图谱/反向链接的标题）
-.sidebar .graph > h3,
-.sidebar .toc > h3,
-.sidebar .backlinks > h3,
-.sidebar .graph > .graph-title {
-  font-size: 0.85rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--gray);
-  font-weight: 600;
-}
+// 目录
+.toc {
+  .toc-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: inherit;
 
-// 顶栏与工具栏按钮
-.page-header {
-  // 顶部留白收一点，首屏能多露出一行正文
-  margin-top: 0.5rem;
+    h3 {
+      margin-bottom: 0.5rem;
+    }
+  }
 
-  a,
-  button {
-    border-radius: var(--r-sm);
-    transition: background-color 0.15s var(--ease);
+  .toc-content {
+    margin: 0;
+    padding-left: 0.7rem;
+    list-style: none;
+    border-left: 1px solid var(--lightgray);
 
-    &:hover {
-      background-color: var(--highlight);
+    li {
+      margin: 0.1rem 0;
+
+      a {
+        display: block;
+        padding: 0.16rem 0 0.16rem 0.35rem;
+        border-radius: var(--r-xs);
+        color: var(--darkgray);
+        font-size: 0.88rem;
+        line-height: 1.5;
+        text-decoration: none;
+        transition: color 0.15s var(--ease), background-color 0.15s var(--ease);
+
+        &:hover {
+          color: var(--secondary);
+          background-color: var(--highlight);
+        }
+      }
+
+      &.depth-2 a,
+      &.depth-3 a {
+        font-size: 0.84rem;
+        color: var(--gray);
+      }
+    }
+
+    // 当前章节：左侧指示条 + 主色
+    li:has(> a.in-view) {
+      position: relative;
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: -0.7rem;
+        top: 0.15rem;
+        bottom: 0.15rem;
+        width: 2px;
+        border-radius: var(--r-pill);
+        background: var(--grad);
+      }
+
+      > a.in-view {
+        color: var(--secondary);
+        font-weight: 600;
+      }
     }
   }
 }
 
-// 搜索框
-#search-container {
-  .search-bar,
-  input {
-    border-radius: var(--r-md);
-  }
-}
+// 反向链接
+.backlinks {
+  ul.overflow {
+    list-style: none;
+    padding: 0;
+    margin: 0;
 
-// 页脚
-footer {
-  color: var(--gray);
-  font-size: 0.88rem;
+    li {
+      margin: 0.15rem 0;
 
-  a {
-    text-decoration: none;
+      a {
+        display: block;
+        padding: 0.3rem 0.5rem;
+        border-radius: var(--r-sm);
+        font-size: 0.88rem;
+        line-height: 1.55;
+        color: var(--darkgray);
+        text-decoration: none;
+        transition: background-color 0.15s var(--ease), color 0.15s var(--ease);
 
-    &:hover {
-      color: var(--secondary);
+        &:hover {
+          background-color: var(--highlight);
+          color: var(--secondary);
+        }
+      }
     }
-  }
-}
-
-// 面包屑：弱化，别和正文标题抢
-.breadcrumbs {
-  font-size: 0.86rem;
-  color: var(--gray);
-
-  a {
-    color: var(--gray);
-    text-decoration: none;
-
-    &:hover {
-      color: var(--secondary);
-    }
-  }
-}
-
-// 标签
-a.internal.tag-link {
-  font-size: 0.82rem;
-  padding: 0.1em 0.5em;
-  border-radius: 999px;
-  background: var(--lightgray);
-  color: var(--darkgray);
-
-  &:hover {
-    background: var(--highlight);
-    color: var(--secondary);
   }
 }
 
 // ------------------------------------------------------------
-//  9. 首页
-//     首页用一点 HTML 结构（hero + 卡片），比纯列表更像一个「站点」
+//  12. 首页
 // ------------------------------------------------------------
+
+// 首页不需要「修改时间 / 阅读时长」那一行
+body[data-slug="index"] .page-header {
+  display: none;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .hero {
-  margin: 0 0 2.5rem;
-  padding: 2rem 1.8rem;
+  position: relative;
+  overflow: hidden;
+  margin: 0 0 2.6rem;
+  padding: 2.4rem 2rem 1.9rem;
   border-radius: var(--r-lg);
   border: 1px solid var(--lightgray);
-  background:
-    radial-gradient(120% 140% at 0% 0%, var(--highlight), transparent 60%),
-    var(--light);
-  box-shadow: var(--shadow-1);
+  background: var(--light);
+  box-shadow: var(--shadow-2);
+  animation: rise-in 0.5s var(--ease) both;
 
-  .hero-title {
-    margin: 0 0 0.6rem;
-    font-size: 2.1rem;
-    line-height: 1.3;
-    color: var(--dark);
+  // 背景网格，右下渐隐
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      repeating-linear-gradient(90deg, var(--lightgray) 0 1px, transparent 1px 46px),
+      repeating-linear-gradient(0deg, var(--lightgray) 0 1px, transparent 1px 46px);
+    mask-image: radial-gradient(75% 95% at 10% 0%, #000 0%, transparent 72%);
+    -webkit-mask-image: radial-gradient(75% 95% at 10% 0%, #000 0%, transparent 72%);
   }
 
-  .hero-sub {
-    margin: 0;
-    font-size: 1.02rem;
+  // 左上角柔光
+  &::after {
+    content: "";
+    position: absolute;
+    left: -10%;
+    top: -55%;
+    width: 55%;
+    height: 200%;
+    pointer-events: none;
+    background: radial-gradient(closest-side, var(--highlight), transparent 70%);
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-eyebrow {
+    display: inline-block;
+    margin: 0 0 0.9rem;
+    padding: 0.2rem 0.7rem;
+    border-radius: var(--r-pill);
+    border: 1px solid var(--lightgray);
+    background: var(--light);
+    font-size: 0.76rem;
+    letter-spacing: 0.04em;
+    color: var(--gray);
+  }
+
+  .hero-title {
+    margin: 0 0 0.7rem;
+    font-size: 2.45rem;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    background: linear-gradient(
+      96deg,
+      var(--dark) 15%,
+      var(--secondary) 58%,
+      var(--tertiary) 95%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    // Quartz 会给标题自动插锚点，首页标题不需要
+    a[role="anchor"] {
+      display: none;
+    }
+  }
+
+  .hero-lead {
+    margin: 0 0 0.5rem;
+    font-size: 1.06rem;
     line-height: 1.8;
     color: var(--darkgray);
   }
 
-  .hero-meta {
-    margin-top: 1.2rem;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-
-    span {
-      font-size: 0.82rem;
-      padding: 0.22rem 0.7rem;
-      border-radius: 999px;
-      background: var(--lightgray);
-      color: var(--darkgray);
-    }
+  .hero-desc {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.85;
+    color: var(--gray);
+    max-width: 42rem;
   }
 
   @media all and ($mobile) {
-    padding: 1.5rem 1.1rem;
+    padding: 1.6rem 1.2rem 1.4rem;
 
     .hero-title {
-      font-size: 1.6rem;
+      font-size: 1.75rem;
     }
   }
 }
 
+// 首页按钮
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+
+  a.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.55rem 1.15rem;
+    border-radius: var(--r-pill);
+    border: 1px solid var(--lightgray);
+    background: var(--light);
+    color: var(--darkgray);
+    font-size: 0.92rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease),
+      border-color 0.15s var(--ease), color 0.15s var(--ease);
+
+    &:hover {
+      transform: translateY(-1px);
+      border-color: var(--secondary);
+      color: var(--secondary);
+      box-shadow: var(--shadow-2);
+      text-decoration: none;
+      background: var(--light);
+    }
+  }
+
+  a.btn-primary {
+    border-color: transparent;
+    background: var(--grad);
+    color: #fff;
+    box-shadow: var(--shadow-2);
+
+    &:hover {
+      color: #fff;
+      filter: brightness(1.06);
+      box-shadow: var(--shadow-3);
+    }
+  }
+}
+
+// 统计数字
+.hero-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2.2rem;
+  margin-top: 1.7rem;
+  padding-top: 1.3rem;
+  border-top: 1px solid var(--lightgray);
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  .stat-num {
+    font-size: 1.65rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--dark);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-label {
+    font-size: 0.82rem;
+    color: var(--gray);
+  }
+
+  @media all and ($mobile) {
+    gap: 1.4rem;
+
+    .stat-num {
+      font-size: 1.35rem;
+    }
+  }
+}
+
+// 卡片网格
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-  gap: 0.9rem;
-  margin: 1.2rem 0 2rem;
+  gap: 1rem;
+  margin: 1.3rem 0 2.2rem;
 
   @media all and ($mobile) {
     grid-template-columns: 1fr;
   }
-}
 
-.card {
-  display: block;
-  padding: 1rem 1.1rem;
-  border: 1px solid var(--lightgray);
-  border-radius: var(--r-md);
-  background: var(--light);
-  box-shadow: var(--shadow-1);
-  text-decoration: none;
-  color: inherit;
-  transition:
-    transform 0.18s var(--ease),
-    box-shadow 0.18s var(--ease),
-    border-color 0.18s var(--ease);
-
-  .card-title {
-    display: block;
-    margin-bottom: 0.35rem;
-    font-weight: 600;
-    color: var(--dark);
-  }
-
-  .card-desc {
-    display: block;
-    font-size: 0.88rem;
-    line-height: 1.65;
-    color: var(--gray);
-  }
-
-  &:hover {
-    transform: translateY(-2px);
-    border-color: var(--secondary);
-    box-shadow: var(--shadow-2);
+  // 用 .card-grid > a.card 提高特异性，压过 Quartz 的 a.internal
+  // （否则卡片的 padding / 背景会被内联链接样式吃掉）
+  > a.card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    overflow: hidden;
+    padding: 1.1rem 1.2rem;
+    border: 1px solid var(--lightgray);
+    border-radius: var(--r-lg);
+    background: var(--light);
+    box-shadow: var(--shadow-1);
     text-decoration: none;
+    color: inherit;
+    animation: rise-in 0.45s var(--ease) both;
+    transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease),
+      border-color 0.2s var(--ease);
+
+    // 顶部渐变条，悬停时展开
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 3px;
+      background: var(--grad);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.28s var(--ease);
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
 
     .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--dark);
+      transition: color 0.15s var(--ease);
+    }
+
+    .card-count {
+      flex: none;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.08rem 0.48rem;
+      border-radius: var(--r-pill);
+      background: var(--lightgray);
+      color: var(--gray);
+      transition: background-color 0.15s var(--ease), color 0.15s var(--ease);
+    }
+
+    .card-desc {
+      font-size: 0.87rem;
+      line-height: 1.7;
+      color: var(--gray);
+    }
+
+    &:hover {
+      transform: translateY(-3px);
+      border-color: transparent;
+      box-shadow: var(--shadow-3);
+      background: var(--light);   // 覆盖 a.internal:hover 的浅蓝底
+      color: inherit;
+      text-decoration: none;
+
+      &::before {
+        transform: scaleX(1);
+      }
+
+      .card-title {
+        color: var(--secondary);
+      }
+
+      .card-count {
+        background: var(--highlight);
+        color: var(--secondary);
+      }
+    }
+  }
+}
+
+// 卡片入场：按序错开
+.card-grid > a.card:nth-child(1) { animation-delay: 0.08s; }
+.card-grid > a.card:nth-child(2) { animation-delay: 0.13s; }
+.card-grid > a.card:nth-child(3) { animation-delay: 0.18s; }
+.card-grid > a.card:nth-child(4) { animation-delay: 0.23s; }
+.card-grid > a.card:nth-child(5) { animation-delay: 0.28s; }
+.card-grid > a.card:nth-child(6) { animation-delay: 0.33s; }
+.card-grid > a.card:nth-child(7) { animation-delay: 0.38s; }
+.card-grid > a.card:nth-child(8) { animation-delay: 0.43s; }
+.card-grid > a.card:nth-child(9) { animation-delay: 0.48s; }
+.card-grid > a.card:nth-child(10) { animation-delay: 0.53s; }
+
+// ------------------------------------------------------------
+//  13. 页脚
+// ------------------------------------------------------------
+footer {
+  margin-top: 3rem;
+  padding: 1.3rem 0 2.5rem;
+  border-top: 1px solid var(--lightgray);
+  color: var(--gray);
+  font-size: 0.86rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+
+  p {
+    margin: 0;
+  }
+
+  ul {
+    display: flex;
+    gap: 1rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  a {
+    text-decoration: none;
+
+    &:hover {
       color: var(--secondary);
+      text-decoration: underline;
     }
   }
 }
 
 // ------------------------------------------------------------
-//  10. 细节
+//  14. 细节
 // ------------------------------------------------------------
-// 分隔线：首页用 --- 分段，做成短横线比通栏细线更克制
-article hr {
+.markdown-preview-view > hr {
   height: 1px;
   margin: 2.5rem auto;
   border: none;
@@ -651,7 +1081,6 @@ video {
   box-shadow: var(--shadow-1);
 }
 
-// 键盘焦点可见性（无障碍：键盘操作时能看清选中了哪）
 a:focus-visible,
 button:focus-visible,
 input:focus-visible {
@@ -660,33 +1089,32 @@ input:focus-visible {
   border-radius: var(--r-xs);
 }
 
-// 阅读进度条
 .navigation-progress {
   height: 2px;
-  background: linear-gradient(90deg, var(--secondary), var(--tertiary));
+  background: var(--grad);
 }
 
 // ------------------------------------------------------------
-//  11. 响应式
+//  15. 响应式与无障碍
 // ------------------------------------------------------------
 @media all and ($mobile) {
   article {
     p {
       line-height: 1.8;
     }
+  }
 
-    & > h1 {
-      font-size: 1.7rem;
-    }
+  .page-header h1.article-title {
+    font-size: 1.7rem;
+  }
 
-    h2 {
-      font-size: 1.28rem;
-      margin-top: 2.1rem;
-    }
+  .markdown-preview-view > h2 {
+    font-size: 1.28rem;
+    margin-top: 2.1rem;
+  }
 
-    h3 {
-      font-size: 1.08rem;
-    }
+  .markdown-preview-view > h3 {
+    font-size: 1.08rem;
   }
 
   .table-container > table {
@@ -698,5 +1126,21 @@ input:focus-visible {
     td {
       font-size: 0.88rem;
     }
+  }
+
+  footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+// 尊重系统的「减少动态效果」设置
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
