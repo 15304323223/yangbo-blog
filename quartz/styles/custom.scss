@@ -1134,6 +1134,59 @@ input:focus-visible {
   }
 }
 
+// ===== 分类索引页 =====
+// 分类页由 gen-index.cjs 生成，以 .cat-head 为标识
+.cat-head {
+  margin: 0 0 1.5rem;
+}
+
+.cat-total {
+  display: inline-block;
+  padding: 0.3rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--secondary);
+  background: color-mix(in srgb, var(--secondary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--secondary) 26%, transparent);
+}
+
+// 分类页的笔记列表排成自适应网格，比默认长列表更好扫读
+article:has(.cat-head) {
+  > .markdown-preview-view > ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 0.3rem 1.4rem;
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 1.7rem;
+
+    > li {
+      position: relative;
+      padding-left: 0.95rem;
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.68em;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--tertiary);
+        opacity: 0.5;
+        transition: opacity 0.18s ease, background 0.18s ease;
+      }
+
+      &:hover::before {
+        opacity: 1;
+        background: var(--secondary);
+      }
+    }
+  }
+}
+
 // 尊重系统的「减少动态效果」设置
 @media (prefers-reduced-motion: reduce) {
   *,

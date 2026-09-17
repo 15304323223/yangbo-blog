@@ -21,6 +21,7 @@
     "install-plugins": "npx tsx ./quartz/plugins/loader/install-plugins.ts",
     "prebuild": "npm run install-plugins",
     "sync": "node sync-content.cjs",
+    "gen-index": "node gen-index.cjs",
     "publish": "node publish.cjs"
   },
   "engines": {
