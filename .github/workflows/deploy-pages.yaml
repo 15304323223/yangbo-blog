@@ -41,6 +41,11 @@ jobs:
       - name: Build site
         run: npx quartz build
 
+      # robots.txt 必须位于站点根目录，而 Quartz 只会把 quartz/static 输出到 public/static，
+      # 所以这里手动复制到根。内容见仓库根目录的 robots.txt（禁止所有爬虫）
+      - name: Copy robots.txt to site root
+        run: cp robots.txt public/robots.txt
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:

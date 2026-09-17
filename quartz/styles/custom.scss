@@ -1187,6 +1187,41 @@ article:has(.cat-head) {
   }
 }
 
+// ===== 内容防护（配合 quartz/static/protect.js）=====
+// 说明：静态站点无法真正阻止下载，这里只是提高门槛。
+// 代码块与输入框保持可选中，否则技术博客的代码没法复制。
+#quartz-root {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none; // 移动端长按弹菜单
+}
+
+pre,
+pre *,
+code,
+code *,
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+// 打印兜底：即使绕过快捷键也打不出正文
+@media print {
+  #quartz-root {
+    display: none !important;
+  }
+
+  body::after {
+    content: "本站内容禁止打印与下载";
+    display: block;
+    padding: 3rem 1rem;
+    text-align: center;
+    color: #8b949e;
+    font-size: 1rem;
+  }
+}
+
 // 尊重系统的「减少动态效果」设置
 @media (prefers-reduced-motion: reduce) {
   *,

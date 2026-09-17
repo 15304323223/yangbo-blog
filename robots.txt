@@ -1,0 +1,37 @@
+# 本站内容不允许任何爬虫抓取
+# 说明：robots.txt 只约束遵守规则的正规爬虫，无法阻止恶意抓取。
+
+# 所有爬虫
+User-agent: *
+Disallow: /
+
+# 常见 AI / 大模型爬虫（* 已覆盖，显式列出便于在访问日志中识别）
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /

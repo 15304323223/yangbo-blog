@@ -144,7 +144,9 @@ plugins:
   - source: "@quartz-community/content-index"
     enabled: true
     options:
-      enableSiteMap: true
+      # 站点已用 robots.txt 禁止所有爬虫，sitemap 只是给爬虫的地图，关掉
+      enableSiteMap: false
+      # RSS 只输出标题和链接、不含正文，保留给人订阅
       enableRSS: true
 
   - source: "@quartz-community/favicon"

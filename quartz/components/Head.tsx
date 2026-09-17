@@ -93,6 +93,10 @@ export default (() => {
         <meta name="description" content={description} />
         <meta name="generator" content="Quartz" />
 
+        {/* 内容防护脚本：禁右键/选中/复制/保存/打印，代码块内放行以便复制代码。
+            自己调试可在 URL 加 ?unlock 临时关闭。详见 quartz/static/protect.js */}
+        <script src={joinSegments(baseDir, "static/protect.js")} defer></script>
+
         {css.map((resource) => CSSResourceToStyleElement(resource, true))}
         {js
           .filter((resource) => resource.loadTime === "beforeDOMReady")
