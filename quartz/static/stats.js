@@ -77,23 +77,30 @@
     wrap.id = "site-stats";
 
     // 访客数（UV）
+    // 注意：不蒜子拿到数据后会执行 bszTag.shows()，把 busuanzi_container_*
+    // 的内联样式改成 display:inline。所以容器 id 必须放在内层 .stat-box 上，
+    // 让 .stat-item 的 inline-flex 布局不被它覆盖，否则图标会和文字错位。
     var uv = el("span", "stat-item");
-    uv.id = "busuanzi_container_site_uv";
     uv.appendChild(el("span", "stat-icon", ICON_USER));
     uv.appendChild(el("span", "stat-label", "访客数"));
+    var uvBox = el("span", "stat-box");
+    uvBox.id = "busuanzi_container_site_uv";
     var uvVal = el("span", "stat-num");
     uvVal.id = "busuanzi_value_site_uv";
-    uv.appendChild(uvVal);
+    uvBox.appendChild(uvVal);
+    uv.appendChild(uvBox);
     wrap.appendChild(uv);
 
     // 总访问量（PV）
     var pv = el("span", "stat-item");
-    pv.id = "busuanzi_container_site_pv";
     pv.appendChild(el("span", "stat-icon", ICON_EYE));
     pv.appendChild(el("span", "stat-label", "总访问量"));
+    var pvBox = el("span", "stat-box");
+    pvBox.id = "busuanzi_container_site_pv";
     var pvVal = el("span", "stat-num");
     pvVal.id = "busuanzi_value_site_pv";
-    pv.appendChild(pvVal);
+    pvBox.appendChild(pvVal);
+    pv.appendChild(pvBox);
     wrap.appendChild(pv);
 
     footer.insertBefore(wrap, footer.firstChild);
