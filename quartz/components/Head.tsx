@@ -95,7 +95,12 @@ export default (() => {
 
         {/* 内容防护脚本：禁右键/选中/复制/保存/打印，代码块内放行以便复制代码。
             自己调试可在 URL 加 ?unlock 临时关闭。详见 quartz/static/protect.js */}
-        <script src={joinSegments(baseDir, "static/protect.js")} defer></script>
+        <script src={joinSegments(baseDir, "static/protect.js")} defer data-persist></script>
+
+        {/* 访问量统计：页脚显示全站访客数/访问量，文章元信息行显示本篇阅读量。
+            data-persist 是必须的 —— 它让脚本在 SPA 导航时不重复执行，
+            脚本内部监听 nav 事件自行重挂。详见 quartz/static/stats.js */}
+        <script src={joinSegments(baseDir, "static/stats.js")} defer data-persist></script>
 
         {css.map((resource) => CSSResourceToStyleElement(resource, true))}
         {js

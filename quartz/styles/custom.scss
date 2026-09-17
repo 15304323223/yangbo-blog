@@ -1187,6 +1187,72 @@ article:has(.cat-head) {
   }
 }
 
+// ===== 访问量统计（配合 quartz/static/stats.js）=====
+// 数字由不蒜子异步回填，回填前整块透明，回填后 JS 加 .is-ready 淡入；
+// 若 10 秒内没拿到数字，脚本会把整块移除，不会留空壳。
+footer {
+  > .site-stats {
+    flex: 1 0 100%; // 独占一行，与下方的版权、链接分开
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem 1.6rem;
+    padding-bottom: 0.9rem;
+    margin-bottom: 0.1rem;
+    border-bottom: 1px solid var(--lightgray);
+  }
+}
+
+.site-stats .stat-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--gray);
+  opacity: 0;
+  transition: opacity 0.35s var(--ease);
+
+  &.is-ready {
+    opacity: 1;
+  }
+}
+
+.stat-icon {
+  display: inline-flex;
+
+  svg {
+    width: 15px;
+    height: 15px;
+    opacity: 0.75;
+  }
+}
+
+.stat-num,
+.page-pv-num {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums; // 等宽数字，避免跳动
+  color: var(--secondary);
+}
+
+// 文章元信息行里的「阅读量 123」
+// .content-meta 带 show-comma，会自动在前面几项后补逗号，这里不用管分隔
+.page-pv {
+  opacity: 0;
+  transition: opacity 0.35s var(--ease);
+
+  &.is-ready {
+    opacity: 1;
+  }
+}
+
+@media all and ($mobile) {
+  footer > .site-stats {
+    justify-content: flex-start;
+    gap: 0.45rem 1.1rem;
+  }
+}
+
 // ===== 内容防护（配合 quartz/static/protect.js）=====
 // 说明：静态站点无法真正阻止下载，这里只是提高门槛。
 // 代码块与输入框保持可选中，否则技术博客的代码没法复制。
